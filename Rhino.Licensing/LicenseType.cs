@@ -26,6 +26,21 @@ namespace Rhino.Licensing
         Personal,
 
         /// <summary>
+        /// Professional license
+        /// </summary>
+        Professional,
+
+        /// <summary>
+        /// Business license
+        /// </summary>
+        Business,
+
+        /// <summary>
+        /// Enterprise license
+        /// </summary>
+        Enterprise,
+
+        /// <summary>
         /// Floating license
         /// </summary>
         Floating,
