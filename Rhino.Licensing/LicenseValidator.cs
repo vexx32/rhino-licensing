@@ -18,7 +18,7 @@ namespace Rhino.Licensing
         /// <param name="publicKey">public key</param>
         /// <param name="licensePath">path to license file</param>
         public LicenseValidator(string publicKey, string licensePath)
-            : base(publicKey)
+            : base(publicKey, enableDiscovery: false)
         {
             this.licensePath = licensePath;
         }

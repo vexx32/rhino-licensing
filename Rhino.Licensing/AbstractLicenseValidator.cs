@@ -239,7 +239,7 @@ namespace Rhino.Licensing
         /// and a service endpoint address to validate the license.
         /// </summary>
         protected AbstractLicenseValidator(string publicKey, string licenseServerUrl, Guid clientId)
-			:this(publicKey)
+			:this(publicKey, enableDiscovery: true)
         {
             this.licenseServerUrl = licenseServerUrl;
     		this.clientId = clientId;
