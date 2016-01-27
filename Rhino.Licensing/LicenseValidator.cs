@@ -67,7 +67,7 @@ namespace Rhino.Licensing
             if (File.Exists(licensePath) == false)
             {
                 Log.WarnFormat("Could not find license file: {0}", licensePath);
-                throw new LicenseFileNotFoundException();
+                throw new LicenseFileNotFoundException(string.Format("Could not find license file: {0}", licensePath));
             }
 
             base.AssertValidLicense();

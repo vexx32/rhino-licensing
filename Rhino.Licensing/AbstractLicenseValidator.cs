@@ -262,7 +262,7 @@ namespace Rhino.Licensing
             }
 
             Log.WarnFormat("Could not validate existing license\r\n{0}", License);
-            throw new LicenseNotFoundException();
+            throw new LicenseNotFoundException("Could not validate existing license");
         }
 
         private bool HasExistingLicense()
