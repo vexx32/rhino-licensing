@@ -31,6 +31,16 @@ namespace Rhino.Licensing
         Professional,
 
         /// <summary>
+        /// MSP license
+        /// </summary>
+        ManagedServiceProvider,
+
+        /// <summary>
+        /// Educational license
+        /// </summary>
+        Education,
+
+        /// <summary>
         /// Business license
         /// </summary>
         Business,
