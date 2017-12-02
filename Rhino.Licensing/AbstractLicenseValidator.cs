@@ -400,6 +400,21 @@ namespace Rhino.Licensing
             if (!NetworkInterface.GetIsNetworkAvailable())
                 return;
 
+            if (LicenseType == LicenseType.Business 
+                | LicenseType == LicenseType.Architect
+                | LicenseType == LicenseType.Education
+                | LicenseType == LicenseType.Enterprise
+                )
+            {
+                // Many organizations have blocked NTP traffic, so this
+                // check creates additional noise that is cause for 
+                // concern on enterprise security teams.
+                // Since the traffic is already blocked, 
+                // this check would not produce a desired result 
+                // anyway.
+                return;
+            }
+
             var sntp = new SntpClient(TimeServers);
             sntp.BeginGetDate(time =>
             {
