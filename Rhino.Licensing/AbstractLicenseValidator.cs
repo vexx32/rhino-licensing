@@ -311,6 +311,14 @@ namespace Rhino.Licensing
             }
         }
 
+        /// <summary>
+        /// Gets or sets the optional subscription endpoint passcode.
+        /// </summary>
+        /// <value>
+        /// The optional subscription endpoint passcode.
+        /// </value>
+        public string SubscriptionEndpointPasscode { get; set; }
+
         private bool ValidateSubscription()
         {
             if ((ExpirationDate - DateTime.UtcNow).TotalDays > 4)
@@ -352,7 +360,7 @@ namespace Rhino.Licensing
             var service = ChannelFactory<ISubscriptionLicensingService>.CreateChannel(new BasicHttpBinding(), new EndpointAddress(SubscriptionEndpoint));
             try
             {
-                var newLicense = service.LeaseLicense(License);
+                var newLicense = service.LeaseLicense(License, SubscriptionEndpointPasscode);
                 TryOverwritingWithNewLicense(newLicense);
             }
             finally

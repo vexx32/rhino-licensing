@@ -137,7 +137,7 @@ namespace Rhino.Licensing.Tests
 
     public class NoOpSubscriptionLicensingService : ISubscriptionLicensingService
     {
-        public string LeaseLicense(string previousLicense)
+        public string LeaseLicense(string previousLicense, string passcode)
         {
             return previousLicense;
         }
@@ -145,7 +145,7 @@ namespace Rhino.Licensing.Tests
 
     public class DummySubscriptionLicensingService : ISubscriptionLicensingService
     {
-        public string LeaseLicense(string previousLicense)
+        public string LeaseLicense(string previousLicense, string passcode)
         {
             var tempFileName = Path.GetTempFileName();
             try

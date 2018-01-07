@@ -9,11 +9,12 @@ namespace Rhino.Licensing
     public interface ISubscriptionLicensingService
     {
         /// <summary>
-        /// Issues a leased license
+        /// Issues an updated subscription license
         /// </summary>
-        /// <param name="previousLicense"></param>
+        /// <param name="previousLicense">The current or previous license.</param>
+        /// <param name="passcode">optional passcode for server license leasing</param>
         /// <returns></returns>
         [OperationContract]
-        string LeaseLicense(string previousLicense);
+        string LeaseLicense(string previousLicense, string passcode);
     }
 }
