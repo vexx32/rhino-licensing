@@ -352,6 +352,16 @@ namespace Rhino.Licensing
             try
             {
                 var newLicense = service.LeaseLicense(License, SubscriptionEndpointPasscode);
+
+                if (string.IsNullOrWhiteSpace(newLicense)) return;
+
+                if (newLicense.IndexOf("no update", 0, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    Log.WarnFormat(newLicense);
+                    
+                    return;
+                }
+
                 TryOverwritingWithNewLicense(newLicense);
             }
             finally
