@@ -26,32 +26,32 @@ namespace Rhino.Licensing
         Personal,
 
         /// <summary>
-        /// Professional license
+        /// Professional license (subscription)
         /// </summary>
         Professional,
 
         /// <summary>
-        /// Architect license
+        /// Architect license (subscription)
         /// </summary>
         Architect,
 
         /// <summary>
-        /// MSP license
+        /// MSP license (subscription)
         /// </summary>
         ManagedServiceProvider,
 
         /// <summary>
-        /// Educational license
+        /// Educational license (subscription)
         /// </summary>
         Education,
 
         /// <summary>
-        /// Business license
+        /// Business license (subscription)
         /// </summary>
         Business,
 
         /// <summary>
-        /// Enterprise license
+        /// Enterprise license (subscription)
         /// </summary>
         Enterprise,
 
@@ -63,6 +63,6 @@ namespace Rhino.Licensing
         /// <summary>
         /// Subscription based license
         /// </summary>
-        Subscription
+        Subscription,
     }
 }
