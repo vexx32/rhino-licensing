@@ -69,10 +69,8 @@ namespace Rhino.Licensing.Tests
                                              DateTime.UtcNow.AddDays(-1),
                                              new Dictionary<string, string> { { "version", "2.0" } }, LicenseType.Subscription);
 
-
             var path = Path.GetTempFileName();
             File.WriteAllText(path, license);
-
 
             Assert.Throws<LicenseExpiredException>(() => new LicenseValidator(public_only, path)
             {

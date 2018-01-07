@@ -41,18 +41,21 @@ namespace Rhino.Licensing
             "nist1.sjc.certifiedtime.com"
         };
 
+        /// <summary>
+        /// The license server URL for floating licenses
+        /// </summary>
         private readonly string licenseServerUrl;
         private readonly Guid clientId;
         private readonly string publicKey;
         private readonly Timer nextLeaseTimer;
         private bool disableFutureChecks;
         private bool currentlyValidatingSubscriptionLicense;
-		private DiscoveryHost discoveryHost;
-    	private DiscoveryClient discoveryClient;
+        private DiscoveryHost discoveryHost;
+        private DiscoveryClient discoveryClient;
         private Guid senderId;
         private int subscriptionCheckDays = 10;
 
-    	/// <summary>
+        /// <summary>
         /// Fired when license data is invalidated
         /// </summary>
         public event Action<InvalidationType> LicenseInvalidated;
@@ -62,74 +65,50 @@ namespace Rhino.Licensing
         /// </summary>
         public event Action<DateTime> LicenseExpired;
 
-
         /// <summary>
         /// Gets the expiration date of the license
         /// </summary>
-        public DateTime ExpirationDate
-        {
-            get; private set;
-        }
+        public DateTime ExpirationDate { get; private set; }
 
-		/// <summary>
-		/// How to behave when using the same license multiple times
-		/// </summary>
-		public MultipleLicenseUsage MultipleLicenseUsageBehavior { get; set; }
-
-		/// <summary>
-		/// Options for detecting multiple licenses
-		/// </summary>
-    	public enum MultipleLicenseUsage
-    	{
-			/// <summary>
-			/// Deny if multiple licenses are used
-			/// </summary>
-			Deny,
-			/// <summary>
-			/// Only allow if it is running for the same user
-			/// </summary>
-			AllowForSameUser
-    	}
-
-    	/// <summary>
-        /// Gets or Sets the endpoint address of the subscription service
+        /// <summary>
+        /// How to behave when using the same license multiple times
         /// </summary>
-        public string SubscriptionEndpoint
+        public MultipleLicenseUsage MultipleLicenseUsageBehavior { get; set; }
+
+        /// <summary>
+        /// Options for detecting multiple licenses
+        /// </summary>
+        public enum MultipleLicenseUsage
         {
-            get; set;
+            /// <summary>
+            /// Deny if multiple licenses are used
+            /// </summary>
+            Deny,
+            /// <summary>
+            /// Only allow if it is running for the same user
+            /// </summary>
+            AllowForSameUser
         }
-        
+
         /// <summary>
         /// Gets the Type of the license
         /// </summary>
-        public LicenseType LicenseType
-        {
-            get; private set;
-        }
+        public LicenseType LicenseType { get; private set; }
 
         /// <summary>
         /// Gets the Id of the license holder
         /// </summary>
-        public Guid UserId
-        {
-            get; private set;
-        }
+        public Guid UserId { get; private set; }
 
         /// <summary>
         /// Gets the name of the license holder
         /// </summary>
-        public string Name
-        {
-            get; private set;
-        }
+        public string Name { get; private set; }
 
         /// <summary>
-        /// Gets or Sets Floating license support
+        /// Gets extra license information
         /// </summary>
-        public bool DisableFloatingLicenses
-        {
-            get; set;
-        }
+        public IDictionary<string, string> LicenseAttributes { get; private set; }
 
         /// <summary>
         /// Whether the client discovery server is enabled. This detects duplicate licenses used on the same network.
@@ -137,26 +116,15 @@ namespace Rhino.Licensing
         public bool DiscoveryEnabled { get; protected set; }
 
         /// <summary>
-        /// Gets extra license information
-        /// </summary>
-        public IDictionary<string, string> LicenseAttributes
-        {
-            get; private set;
-        }
-
-        /// <summary>
         /// Gets or Sets the license content
         /// </summary>
-        protected abstract string License
-        {
-            get; set;
-        }
+        protected abstract string License { get; set; }
 
         private void LeaseLicenseAgain(object state)
         {
-        	var client = discoveryClient;
-        	if(client != null)
-				client.PublishMyPresence();
+            var client = discoveryClient;
+            if (client != null)
+                client.PublishMyPresence();
 
             if (HasExistingLicense())
                 return;
@@ -170,7 +138,7 @@ namespace Rhino.Licensing
             if (licenseInvalidated == null)
                 throw new InvalidOperationException("License was invalidated, but there is no one subscribe to the LicenseInvalidated event");
 
-            licenseInvalidated(LicenseType == LicenseType.Floating ? InvalidationType.CannotGetNewLicense : 
+            licenseInvalidated(LicenseType == LicenseType.Floating ? InvalidationType.CannotGetNewLicense :
                                                                      InvalidationType.TimeExpired);
         }
 
@@ -190,11 +158,22 @@ namespace Rhino.Licensing
         /// <param name="enableDiscovery">Whether to enable the client discovery server to detect duplicate licenses used on the same network.</param>
         protected AbstractLicenseValidator(string publicKey, bool enableDiscovery = true)
         {
-        	LeaseTimeout = TimeSpan.FromMinutes(5);
-        	LicenseAttributes = new Dictionary<string, string>();
+            LeaseTimeout = TimeSpan.FromMinutes(5);
+            LicenseAttributes = new Dictionary<string, string>();
             nextLeaseTimer = new Timer(LeaseLicenseAgain);
             this.publicKey = publicKey;
             SetupDiscoveryHost(enableDiscovery);
+        }
+
+        /// <summary>
+        /// Creates a license validator using the client information
+        /// and a service endpoint address to validate the license.
+        /// </summary>
+        protected AbstractLicenseValidator(string publicKey, string licenseServerUrl, Guid clientId)
+            : this(publicKey, enableDiscovery: true)
+        {
+            this.licenseServerUrl = licenseServerUrl;
+            this.clientId = clientId;
         }
 
         private void SetupDiscoveryHost(bool enableDiscovery)
@@ -210,41 +189,30 @@ namespace Rhino.Licensing
         }
 
         private void DiscoveryHostOnClientDiscovered(object sender, DiscoveryHost.ClientDiscoveredEventArgs clientDiscoveredEventArgs)
-    	{
-			if (senderId == clientDiscoveredEventArgs.SenderId) // we got our own notification, ignore it
-				return;
+        {
+            if (senderId == clientDiscoveredEventArgs.SenderId) // we got our own notification, ignore it
+                return;
 
-			if (UserId != clientDiscoveredEventArgs.UserId) // another license, we don't care
-				return;
+            if (UserId != clientDiscoveredEventArgs.UserId) // another license, we don't care
+                return;
 
-			// same user id, different senders
-    		switch (MultipleLicenseUsageBehavior)
-    		{
-    			case MultipleLicenseUsage.AllowForSameUser:
-					if (Environment.UserName == clientDiscoveredEventArgs.UserName)
-						return;
-    				break;
-    		}
+            // same user id, different senders
+            switch (MultipleLicenseUsageBehavior)
+            {
+                case MultipleLicenseUsage.AllowForSameUser:
+                    if (Environment.UserName == clientDiscoveredEventArgs.UserName)
+                        return;
+                    break;
+            }
 
-			RaiseLicenseInvalidated();
+            RaiseLicenseInvalidated();
             RaiseMultipleLicenseDiscovered(clientDiscoveredEventArgs);
-    	}
+        }
 
         /// <summary>
         /// Event that's raised when duplicate licenses are found
         /// </summary>
-    	public event EventHandler<DiscoveryHost.ClientDiscoveredEventArgs> MultipleLicensesWereDiscovered;
-
-    	/// <summary>
-        /// Creates a license validator using the client information
-        /// and a service endpoint address to validate the license.
-        /// </summary>
-        protected AbstractLicenseValidator(string publicKey, string licenseServerUrl, Guid clientId)
-			:this(publicKey, enableDiscovery: true)
-        {
-            this.licenseServerUrl = licenseServerUrl;
-    		this.clientId = clientId;
-        }
+        public event EventHandler<DiscoveryHost.ClientDiscoveredEventArgs> MultipleLicensesWereDiscovered;
 
         /// <summary>
         /// Validates loaded license
@@ -259,6 +227,7 @@ namespace Rhino.Licensing
                     discoveryClient = new DiscoveryClient(senderId, UserId, Environment.MachineName, Environment.UserName);
                     discoveryClient.PublishMyPresence();
                 }
+
                 return;
             }
 
@@ -293,8 +262,7 @@ namespace Rhino.Licensing
                 }
                 else
                 {
-                    if (LicenseExpired == null)
-                        throw new LicenseExpiredException("Expiration Date : " + ExpirationDate);
+                    if (LicenseExpired == null) throw new LicenseExpiredException("Expiration Date : " + ExpirationDate);
 
                     DisableFutureChecks();
                     LicenseExpired(ExpirationDate);
@@ -311,6 +279,13 @@ namespace Rhino.Licensing
                 return false;
             }
         }
+
+        #region Subscription Licenses
+
+        /// <summary>
+        /// Gets or Sets the endpoint address of the subscription service
+        /// </summary>
+        public string SubscriptionEndpoint { get; set; }
 
         /// <summary>
         /// Gets or sets the optional subscription endpoint passcode.
@@ -337,8 +312,7 @@ namespace Rhino.Licensing
             //don't check until x number of days before the license expires
             if ((ExpirationDate - DateTime.UtcNow).TotalDays > SuscriptionEndPointCheckDaysNearExpiration) return true;
 
-            if (currentlyValidatingSubscriptionLicense)
-                return DateTime.UtcNow < ExpirationDate;
+            if (currentlyValidatingSubscriptionLicense) return DateTime.UtcNow < ExpirationDate;
 
             if (SubscriptionEndpoint == null)
                 throw new InvalidOperationException("Subscription endpoints are not supported for this license validator");
@@ -400,8 +374,8 @@ namespace Rhino.Licensing
         /// <returns></returns>
         protected bool TryOverwritingWithNewLicense(string newLicense)
         {
-            if (string.IsNullOrEmpty(newLicense))
-                return false;
+            if (string.IsNullOrEmpty(newLicense)) return false;
+
             try
             {
                 var xmlDocument = new XmlDocument();
@@ -413,8 +387,11 @@ namespace Rhino.Licensing
                 return false;
             }
             License = newLicense;
+
             return true;
         }
+
+        #endregion
 
         private void ValidateUsingNetworkTime()
         {
@@ -441,8 +418,8 @@ namespace Rhino.Licensing
             {
                 if (time > ExpirationDate)
                     RaiseLicenseInvalidated();
-            }
-            ,() =>
+            },
+            () =>
             {
                 /* ignored */
             });
@@ -493,8 +470,9 @@ namespace Rhino.Licensing
                 var result = ValidateXmlDocumentLicense(doc);
                 if (result && disableFutureChecks == false)
                 {
-					nextLeaseTimer.Change(LeaseTimeout, LeaseTimeout);
+                    nextLeaseTimer.Change(LeaseTimeout, LeaseTimeout);
                 }
+
                 return result;
             }
             catch (RhinoLicensingException)
@@ -508,12 +486,19 @@ namespace Rhino.Licensing
             }
         }
 
+        #region Floating Licenses
+
+        /// <summary>
+        /// Gets or Sets Floating license support
+        /// </summary>
+        public bool DisableFloatingLicenses { get; set; }
+
         /// <summary>
         /// Lease timeout
         /// </summary>
-    	public TimeSpan LeaseTimeout { get; set; }
+        public TimeSpan LeaseTimeout { get; set; }
 
-    	private bool ValidateFloatingLicense(string publicKeyOfFloatingLicense)
+        private bool ValidateFloatingLicense(string publicKeyOfFloatingLicense)
         {
             if (DisableFloatingLicenses)
             {
@@ -568,6 +553,8 @@ namespace Rhino.Licensing
                     ((ICommunicationObject)licensingService).Abort();
             }
         }
+
+        #endregion
 
         internal bool ValidateXmlDocumentLicense(XmlDocument doc)
         {
