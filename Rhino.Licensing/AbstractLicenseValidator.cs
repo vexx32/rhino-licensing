@@ -244,7 +244,7 @@ namespace Rhino.Licensing
                     Log.WarnFormat("Failed validating license:\r\n{0}", License);
                     return false;
                 }
-                Log.InfoFormat("License expiration date is {0}", ExpirationDate);
+                Log.DebugFormat("[Licensing] License expiration date is {0}", ExpirationDate);
 
                 bool result;
                 if (LicenseType == LicenseType.Subscription)
