@@ -231,7 +231,7 @@ namespace Rhino.Licensing
                 return;
             }
 
-            Log.WarnFormat("Could not validate existing license\r\n{0}", License);
+            Log.WarnFormat("[Licensing] Could not validate existing license\r\n{0}", License);
             throw new LicenseNotFoundException("Could not validate existing license");
         }
 
@@ -241,7 +241,7 @@ namespace Rhino.Licensing
             {
                 if (TryLoadingLicenseValuesFromValidatedXml() == false)
                 {
-                    Log.WarnFormat("Failed validating license:\r\n{0}", License);
+                    Log.WarnFormat("[Licensing] Failed validating license:\r\n{0}", License);
                     return false;
                 }
                 Log.DebugFormat("[Licensing] License expiration date is {0}", ExpirationDate);
@@ -323,7 +323,7 @@ namespace Rhino.Licensing
             }
             catch (Exception e)
             {
-                Log.Error("Could not re-lease subscription license", e);
+                Log.WarnFormat("[Licensing] Unable to update subscription license. Details:{0} {1}", Environment.NewLine, e.Message);
             }
 
             return ValidateWithoutUsingSubscriptionLeasing();
@@ -383,7 +383,7 @@ namespace Rhino.Licensing
             }
             catch (Exception e)
             {
-                Log.Error("New license is not valid XML\r\n" + newLicense, e);
+                Log.Error("[Licensing] New license is not valid XML\r\n" + newLicense, e);
                 return false;
             }
             License = newLicense;
@@ -445,13 +445,13 @@ namespace Rhino.Licensing
 
                 if (TryGetValidDocument(publicKey, doc) == false)
                 {
-                    Log.WarnFormat("Could not validate xml signature of:\r\n{0}", License);
+                    Log.WarnFormat("[Licensing] Could not validate xml signature of:\r\n{0}", License);
                     return false;
                 }
 
                 if (doc.FirstChild == null)
                 {
-                    Log.WarnFormat("Could not find first child of:\r\n{0}", License);
+                    Log.WarnFormat("[Licensing] Could not find first child of:\r\n{0}", License);
                     return false;
                 }
 
@@ -460,7 +460,7 @@ namespace Rhino.Licensing
                     var node = doc.SelectSingleNode("/floating-license/license-server-public-key/text()");
                     if (node == null)
                     {
-                        Log.WarnFormat("Invalid license, floating license without license server public key:\r\n{0}", License);
+                        Log.WarnFormat("[Licensing] Invalid license, floating license without license server public key:\r\n{0}", License);
                         throw new InvalidOperationException(
                             "Invalid license file format, floating license without license server public key");
                     }
@@ -481,7 +481,7 @@ namespace Rhino.Licensing
             }
             catch (Exception e)
             {
-                Log.Error("Could not validate license", e);
+                Log.Error("[Licensing] Could not validate license", e);
                 return false;
             }
         }
@@ -502,12 +502,12 @@ namespace Rhino.Licensing
         {
             if (DisableFloatingLicenses)
             {
-                Log.Warn("Floating licenses have been disabled");
+                Log.Warn("[Licensing] Floating licenses have been disabled");
                 return false;
             }
             if (licenseServerUrl == null)
             {
-                Log.Warn("Could not find license server url");
+                Log.Warn("[Licensing] Could not find license server url");
                 throw new InvalidOperationException("Floating license encountered, but licenseServerUrl was not set");
             }
 
@@ -523,7 +523,7 @@ namespace Rhino.Licensing
                 success = true;
                 if (leasedLicense == null)
                 {
-                    Log.WarnFormat("Null response from license server: {0}", licenseServerUrl);
+                    Log.WarnFormat("[Licensing] Null response from license server: {0}", licenseServerUrl);
                     throw new FloatingLicenseNotAvailableException();
                 }
 
@@ -532,7 +532,7 @@ namespace Rhino.Licensing
 
                 if (TryGetValidDocument(publicKeyOfFloatingLicense, doc) == false)
                 {
-                    Log.WarnFormat("Could not get valid license from floating license server {0}", licenseServerUrl);
+                    Log.WarnFormat("[Licensing] Could not get valid license from floating license server {0}", licenseServerUrl);
                     throw new FloatingLicenseNotAvailableException();
                 }
 
@@ -541,7 +541,7 @@ namespace Rhino.Licensing
                 {
                     //setup next lease
                     var time = (ExpirationDate.AddMinutes(-5) - DateTime.UtcNow);
-                    Log.DebugFormat("Will lease license again at {0}", time);
+                    Log.DebugFormat("[Licensing] Will lease license again at {0}", time);
                     if (disableFutureChecks == false)
                         nextLeaseTimer.Change(time, time);
                 }
@@ -561,7 +561,7 @@ namespace Rhino.Licensing
             var id = doc.SelectSingleNode("/license/@id");
             if (id == null)
             {
-                Log.WarnFormat("Could not find id attribute in license:\r\n{0}", License);
+                Log.WarnFormat("[Licensing] Could not find id attribute in license:\r\n{0}", License);
                 return false;
             }
 
@@ -570,7 +570,7 @@ namespace Rhino.Licensing
             var date = doc.SelectSingleNode("/license/@expiration");
             if (date == null)
             {
-                Log.WarnFormat("Could not find expiration in license:\r\n{0}", License);
+                Log.WarnFormat("[Licensing] Could not find expiration in license:\r\n{0}", License);
                 return false;
             }
 
@@ -579,7 +579,7 @@ namespace Rhino.Licensing
             var licenseType = doc.SelectSingleNode("/license/@type");
             if (licenseType == null)
             {
-                Log.WarnFormat("Could not find license type in {0}", licenseType);
+                Log.WarnFormat("[Licensing] Could not find license type in {0}", licenseType);
                 return false;
             }
 
@@ -588,7 +588,7 @@ namespace Rhino.Licensing
             var name = doc.SelectSingleNode("/license/name/text()");
             if (name == null)
             {
-                Log.WarnFormat("Could not find licensee's name in license:\r\n{0}", License);
+                Log.WarnFormat("[Licensing] Could not find licensee's name in license:\r\n{0}", License);
                 return false;
             }
 
@@ -618,7 +618,7 @@ namespace Rhino.Licensing
             var sig = (XmlElement)doc.SelectSingleNode("//sig:Signature", nsMgr);
             if (sig == null)
             {
-                Log.WarnFormat("Could not find this signature node on license:\r\n{0}", License);
+                Log.WarnFormat("[Licensing] Could not find this signature node on license:\r\n{0}", License);
                 return false;
             }
             signedXml.LoadXml(sig);
