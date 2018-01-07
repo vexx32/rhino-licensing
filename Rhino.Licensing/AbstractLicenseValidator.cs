@@ -400,10 +400,10 @@ namespace Rhino.Licensing
             if (!NetworkInterface.GetIsNetworkAvailable())
                 return;
 
-            if (LicenseType == LicenseType.Business 
-                | LicenseType == LicenseType.Architect
-                | LicenseType == LicenseType.Education
-                | LicenseType == LicenseType.Enterprise
+            if (LicenseType == LicenseType.Business
+                || LicenseType == LicenseType.Architect
+                || LicenseType == LicenseType.Education
+                || LicenseType == LicenseType.Enterprise
                 )
             {
                 // Many organizations have blocked NTP traffic, so this
