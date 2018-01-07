@@ -314,8 +314,12 @@ namespace Rhino.Licensing
 
             if (currentlyValidatingSubscriptionLicense) return DateTime.UtcNow < ExpirationDate;
 
+            // this information may not be available
             if (SubscriptionEndpoint == null)
-                throw new InvalidOperationException("Subscription endpoints are not supported for this license validator");
+            {
+                Log.WarnFormat("This license is a subscription but does not have an endpoint configured to check into.");
+                return ValidateWithoutUsingSubscriptionLeasing();
+            }
 
             try
             {
