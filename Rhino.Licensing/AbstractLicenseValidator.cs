@@ -390,6 +390,7 @@ namespace Rhino.Licensing
                 Log.Error("[Licensing] New license is not valid XML\r\n" + newLicense, e);
                 return false;
             }
+            // this attempts to write the file in License Validator
             License = newLicense;
 
             return true;
