@@ -50,6 +50,7 @@ namespace Rhino.Licensing
 		private DiscoveryHost discoveryHost;
     	private DiscoveryClient discoveryClient;
         private Guid senderId;
+        private int subscriptionCheckDays = 10;
 
     	/// <summary>
         /// Fired when license data is invalidated
@@ -319,10 +320,22 @@ namespace Rhino.Licensing
         /// </value>
         public string SubscriptionEndpointPasscode { get; set; }
 
+        /// <summary>
+        /// Gets or sets the suscription end point check days near expiration.
+        /// </summary>
+        /// <value>
+        /// The number of days before expiration that the subscription starts checking in to see if there is a new license.
+        /// </value>
+        public int SuscriptionEndPointCheckDaysNearExpiration
+        {
+            get { return subscriptionCheckDays; }
+            set { subscriptionCheckDays = value; }
+        }
+
         private bool ValidateSubscription()
         {
-            if ((ExpirationDate - DateTime.UtcNow).TotalDays > 4)
-                return true;
+            //don't check until x number of days before the license expires
+            if ((ExpirationDate - DateTime.UtcNow).TotalDays > SuscriptionEndPointCheckDaysNearExpiration) return true;
 
             if (currentlyValidatingSubscriptionLicense)
                 return DateTime.UtcNow < ExpirationDate;
