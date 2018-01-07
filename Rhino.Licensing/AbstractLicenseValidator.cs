@@ -247,7 +247,13 @@ namespace Rhino.Licensing
                 Log.DebugFormat("[Licensing] License expiration date is {0}", ExpirationDate);
 
                 bool result;
-                if (LicenseType == LicenseType.Subscription)
+                if (LicenseType == LicenseType.Subscription ||
+                    LicenseType == LicenseType.Professional ||
+                    LicenseType == LicenseType.ManagedServiceProvider ||
+                    LicenseType == LicenseType.Architect ||
+                    LicenseType == LicenseType.Business ||
+                    LicenseType == LicenseType.Enterprise ||
+                    LicenseType == LicenseType.Education)
                 {
                     result = ValidateSubscription();
                 }
