@@ -579,7 +579,7 @@ namespace Rhino.Licensing
         private bool TryGetValidDocument(string licensePublicKey, XmlDocument doc)
         {
             var rsa = new RSACryptoServiceProvider();
-            rsa.FromXmlString(licensePublicKey);
+            RSAKeyExtensions.FromXmlString(rsa,licensePublicKey);
 
             var nsMgr = new XmlNamespaceManager(doc.NameTable);
             nsMgr.AddNamespace("sig", "http://www.w3.org/2000/09/xmldsig#");
