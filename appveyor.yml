@@ -11,12 +11,11 @@ install:
   - choco install gitversion.portable -pre -y
   - cinst gitlink -version 2.4.1 -y
 before_build:
-- cmd: >-
 - ps: gitversion /l console /output buildserver
 - cmd: msbuild %path_to_sln% /t:restore /p:PackageVersion=%GitVersion_FullSemVer% /p:PackageId="Rhino.Licencing.DazinatorFork"
-- cmd: nuget restore Rhino.Licensing.AdminTool/Rhino.Licensing.AdminTool.csproj
-- cmd: nuget restore Rhino.Licensing.AdminTool.Tests/Rhino.Licensing.AdminTool.Tests.csproj
-- cmd: nuget restore Rhino.Licensing.Tests/Rhino.Licensing.Tests.csproj
+- cmd: nuget restore Rhino.Licensing.AdminTool/Rhino.Licensing.AdminTool.csproj  -SolutionDirectory .
+- cmd: nuget restore Rhino.Licensing.AdminTool.Tests/Rhino.Licensing.AdminTool.Tests.csproj -SolutionDirectory .
+- cmd: nuget restore Rhino.Licensing.Tests/Rhino.Licensing.Tests.csproj -SolutionDirectory .
 build:
   project: '%path_to_sln%'
   verbosity: minimal
