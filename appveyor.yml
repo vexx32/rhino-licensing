@@ -14,9 +14,9 @@ before_build:
 - cmd: >-
 - ps: gitversion /l console /output buildserver
 - cmd: msbuild %path_to_sln% /t:restore /p:PackageVersion=%GitVersion_FullSemVer% /p:PackageId="Rhino.Licencing.DazinatorFork"
-- cmd: nuget restore Rhino.Licensing.AdminTool/Rhino.Licensing.AdminTool.csproj /t:restore
-- cmd: nuget restore Rhino.Licensing.AdminTool.Tests/Rhino.Licensing.AdminTool.Tests.csproj /t:restore
-- cmd: nuget restore Rhino.Licensing.Tests/Rhino.Licensing.Tests.csproj /t:restore
+- cmd: nuget restore Rhino.Licensing.AdminTool/Rhino.Licensing.AdminTool.csproj
+- cmd: nuget restore Rhino.Licensing.AdminTool.Tests/Rhino.Licensing.AdminTool.Tests.csproj
+- cmd: nuget restore Rhino.Licensing.Tests/Rhino.Licensing.Tests.csproj
 build:
   project: '%path_to_sln%'
   verbosity: minimal
