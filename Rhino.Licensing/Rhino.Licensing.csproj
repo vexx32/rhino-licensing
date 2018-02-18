@@ -8,7 +8,7 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/ayende/rhino-licensing</PackageProjectUrl>
     <PackageTags>Licencing</PackageTags>
-    
+    <PackageId>Rhino.Licensing</PackageId>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\ayende-open-source.snk</AssemblyOriginatorKeyFile>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

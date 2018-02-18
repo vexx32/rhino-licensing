@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhino.Licensing", "Rhino.Licensing\Rhino.Licensing.csproj", "{05EFD7EB-F0FB-4B65-8E4A-C8FF8DDC6A78}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhino.Licensing", "Rhino.Licensing\Rhino.Licensing.csproj", "{05EFD7EB-F0FB-4B65-8E4A-C8FF8DDC6A78}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhino.Licensing.Tests", "Rhino.Licensing.Tests\Rhino.Licensing.Tests.csproj", "{DE9C3868-B836-4CA5-A6FB-2FD78542D3B6}"
 EndProject
@@ -13,6 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhino.Licensing.AdminTool.T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{716C50C6-55B5-4D1B-B956-D2CD7FDBF249}"
 	ProjectSection(SolutionItems) = preProject
+		appveyor.yml = appveyor.yml
 		README.md = README.md
 		Solution Items\SolutionInfo.cs = Solution Items\SolutionInfo.cs
 	EndProjectSection
@@ -42,5 +43,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4B258F26-FB3A-469C-AFF1-B9DC2B94A15D}
 	EndGlobalSection
 EndGlobal
