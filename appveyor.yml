@@ -2,6 +2,7 @@ branches:
   only:
   - netstandard
 image: Visual Studio 2017
+configuration: Release
 assembly_info:
   patch: false
 environment:
