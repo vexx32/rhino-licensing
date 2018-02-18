@@ -19,7 +19,7 @@ build:
   project: '%path_to_sln%'
   verbosity: minimal
 after_build:
-- cmd: msbuild %path_to_sln% /t:Pack /p:PackageVersion=%GitVersion_FullSemVer% /p:PackageId="Rhino.Licencing.DazinatorFork"
+- cmd: msbuild Rhino.Licensing/Rhino.Licensing.csproj /t:Pack /p:PackageVersion=%GitVersion_FullSemVer% /p:PackageId="Rhino.Licencing.DazinatorFork"
 artifacts:
 - path: '**/Rhino.Licencing.DazinatorFork*.nupkg'
 deploy:
