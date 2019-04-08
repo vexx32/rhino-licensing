@@ -253,7 +253,9 @@ namespace Rhino.Licensing
                     LicenseType == LicenseType.Architect ||
                     LicenseType == LicenseType.Business ||
                     LicenseType == LicenseType.Enterprise ||
-                    LicenseType == LicenseType.Education)
+                    LicenseType == LicenseType.Education || 
+                    LicenseType == LicenseType.Trial
+                    )
                 {
                     result = ValidateSubscription();
                 }
