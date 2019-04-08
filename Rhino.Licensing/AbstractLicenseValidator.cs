@@ -425,6 +425,7 @@ namespace Rhino.Licensing
                 || LicenseType == LicenseType.Architect
                 || LicenseType == LicenseType.Education
                 || LicenseType == LicenseType.Enterprise
+                || LicenseType == LicenseType.Trial
                 )
             {
                 // Many organizations have blocked NTP traffic, so this
