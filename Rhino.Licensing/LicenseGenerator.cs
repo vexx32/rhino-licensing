@@ -35,7 +35,7 @@ namespace Rhino.Licensing
         {
             using (var rsa = new RSACryptoServiceProvider())
             {
-                rsa.FromXmlString(privateKey);
+                RSAKeyExtensions.FromXmlString(rsa,privateKey);
                 var doc = new XmlDocument();
                 var license = doc.CreateElement("floating-license");
                 doc.AppendChild(license);
@@ -89,7 +89,7 @@ namespace Rhino.Licensing
         {
             using (var rsa = new RSACryptoServiceProvider())
             {
-                rsa.FromXmlString(privateKey);
+                RSAKeyExtensions.FromXmlString(rsa,privateKey);
                 var doc = CreateDocument(id, name, expirationDate, attributes, licenseType);
 
                 var signature = GetXmlDigitalSignature(doc, rsa);

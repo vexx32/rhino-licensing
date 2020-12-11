@@ -21,8 +21,8 @@ namespace Rhino.Licensing.AdminTool.Model
             _key = RSA.Create();
             _id = Guid.NewGuid();
             _issuedLicenses = new ObservableCollection<License>();
-            _publicKey = _key.ToXmlString(false);
-            _privateKey = _key.ToXmlString(true);
+            _publicKey = RSAKeyExtensions.ToXmlString(_key,false);
+            _privateKey = RSAKeyExtensions.ToXmlString(_key,true);
         }
 
         [DataMember]

@@ -7,8 +7,8 @@ using System.Security.Cryptography.Xml;
 using System.ServiceModel;
 using System.Threading;
 using System.Xml;
-using log4net;
 using Rhino.Licensing.Discovery;
+using Rhino.Licensing.Logging;
 
 namespace Rhino.Licensing
 {
@@ -20,12 +20,12 @@ namespace Rhino.Licensing
         /// <summary>
         /// License validator logger
         /// </summary>
-        protected readonly ILog Log = LogManager.GetLogger(typeof(LicenseValidator));
+        private static readonly ILog Log = LogProvider.GetLogger(typeof(AbstractLicenseValidator));
 
         /// <summary>
         /// Standard Time servers
         /// </summary>
-        protected readonly string[] TimeServers =
+        protected static readonly string[] TimeServers =
         {
             "time.nist.gov",
             "time-nw.nist.gov",
@@ -50,7 +50,7 @@ namespace Rhino.Licensing
         private readonly Timer nextLeaseTimer;
         private bool disableFutureChecks;
         private bool currentlyValidatingSubscriptionLicense;
-        private DiscoveryHost discoveryHost;
+        private readonly DiscoveryHost discoveryHost;
         private DiscoveryClient discoveryClient;
         private Guid senderId;
         private int subscriptionCheckDays = 10;
@@ -66,29 +66,32 @@ namespace Rhino.Licensing
         public event Action<DateTime> LicenseExpired;
 
         /// <summary>
+        /// Event that's raised when duplicate licenses are found
+        /// </summary>
+        public event EventHandler<DiscoveryHost.ClientDiscoveredEventArgs> MultipleLicensesWereDiscovered;
+
+        /// <summary>
+        /// Disable the <see cref="ExpirationDate"/> validation with the time servers
+        /// </summary>
+        public bool DisableTimeServersCheck
+        {
+            get; set;
+        }
+
+        /// <summary>
         /// Gets the expiration date of the license
         /// </summary>
         public DateTime ExpirationDate { get; private set; }
 
         /// <summary>
+        /// Lease timeout
+        /// </summary>
+        public TimeSpan LeaseTimeout { get; set; }
+
+        /// <summary>
         /// How to behave when using the same license multiple times
         /// </summary>
         public MultipleLicenseUsage MultipleLicenseUsageBehavior { get; set; }
-
-        /// <summary>
-        /// Options for detecting multiple licenses
-        /// </summary>
-        public enum MultipleLicenseUsage
-        {
-            /// <summary>
-            /// Deny if multiple licenses are used
-            /// </summary>
-            Deny,
-            /// <summary>
-            /// Only allow if it is running for the same user
-            /// </summary>
-            AllowForSameUser
-        }
 
         /// <summary>
         /// Gets the Type of the license
@@ -113,12 +116,46 @@ namespace Rhino.Licensing
         /// <summary>
         /// Whether the client discovery server is enabled. This detects duplicate licenses used on the same network.
         /// </summary>
-        public bool DiscoveryEnabled { get; protected set; }
+        public bool DiscoveryEnabled { get; private set; }
 
         /// <summary>
         /// Gets or Sets the license content
         /// </summary>
         protected abstract string License { get; set; }
+
+        /// <summary>
+        /// Creates a license validator with specfied public key.
+        /// </summary>
+        /// <param name="publicKey">public key</param>
+        /// <param name="enableDiscovery">Whether to enable the client discovery server to detect duplicate licenses used on the same network.</param>
+        protected AbstractLicenseValidator(string publicKey, bool enableDiscovery = true)
+        {
+            LeaseTimeout = TimeSpan.FromMinutes(5);
+            LicenseAttributes = new Dictionary<string, string>();
+            nextLeaseTimer = new Timer(LeaseLicenseAgain);
+            this.publicKey = publicKey;
+
+            DiscoveryEnabled = enableDiscovery;
+
+            if (DiscoveryEnabled)
+            {
+                senderId = Guid.NewGuid();
+                discoveryHost = new DiscoveryHost();
+                discoveryHost.ClientDiscovered += DiscoveryHostOnClientDiscovered;
+                discoveryHost.Start();
+            }
+        }
+
+        /// <summary>
+        /// Creates a license validator using the client information
+        /// and a service endpoint address to validate the license.
+        /// </summary>
+        protected AbstractLicenseValidator(string publicKey, string licenseServerUrl, Guid clientId)
+            : this(publicKey)
+        {
+            this.licenseServerUrl = licenseServerUrl;
+            this.clientId = clientId;
+        }
 
         private void LeaseLicenseAgain(object state)
         {
@@ -151,43 +188,6 @@ namespace Rhino.Licensing
             }
         }
 
-        /// <summary>
-        /// Creates a license validator with specfied public key.
-        /// </summary>
-        /// <param name="publicKey">public key</param>
-        /// <param name="enableDiscovery">Whether to enable the client discovery server to detect duplicate licenses used on the same network.</param>
-        protected AbstractLicenseValidator(string publicKey, bool enableDiscovery = true)
-        {
-            LeaseTimeout = TimeSpan.FromMinutes(5);
-            LicenseAttributes = new Dictionary<string, string>();
-            nextLeaseTimer = new Timer(LeaseLicenseAgain);
-            this.publicKey = publicKey;
-            SetupDiscoveryHost(enableDiscovery);
-        }
-
-        /// <summary>
-        /// Creates a license validator using the client information
-        /// and a service endpoint address to validate the license.
-        /// </summary>
-        protected AbstractLicenseValidator(string publicKey, string licenseServerUrl, Guid clientId)
-            : this(publicKey, enableDiscovery: true)
-        {
-            this.licenseServerUrl = licenseServerUrl;
-            this.clientId = clientId;
-        }
-
-        private void SetupDiscoveryHost(bool enableDiscovery)
-        {
-            DiscoveryEnabled = enableDiscovery;
-
-            if (!enableDiscovery) return;
-
-            senderId = Guid.NewGuid();
-            discoveryHost = new DiscoveryHost();
-            discoveryHost.ClientDiscovered += DiscoveryHostOnClientDiscovered;
-            discoveryHost.Start();
-        }
-
         private void DiscoveryHostOnClientDiscovered(object sender, DiscoveryHost.ClientDiscoveredEventArgs clientDiscoveredEventArgs)
         {
             if (senderId == clientDiscoveredEventArgs.SenderId) // we got our own notification, ignore it
@@ -208,11 +208,6 @@ namespace Rhino.Licensing
             RaiseLicenseInvalidated();
             RaiseMultipleLicenseDiscovered(clientDiscoveredEventArgs);
         }
-
-        /// <summary>
-        /// Event that's raised when duplicate licenses are found
-        /// </summary>
-        public event EventHandler<DiscoveryHost.ClientDiscoveredEventArgs> MultipleLicensesWereDiscovered;
 
         /// <summary>
         /// Validates loaded license
@@ -253,7 +248,7 @@ namespace Rhino.Licensing
                     LicenseType == LicenseType.Architect ||
                     LicenseType == LicenseType.Business ||
                     LicenseType == LicenseType.Enterprise ||
-                    LicenseType == LicenseType.Education || 
+                    LicenseType == LicenseType.Education ||
                     LicenseType == LicenseType.Trial
                     )
                 {
@@ -264,11 +259,13 @@ namespace Rhino.Licensing
                     result = DateTime.UtcNow < ExpirationDate;
                 }
 
-                if (result)
+                if (result &&
+                    !DisableTimeServersCheck)
                 {
                     ValidateUsingNetworkTime();
                 }
-                else
+
+                if (!result)
                 {
                     if (LicenseExpired == null) throw new LicenseExpiredException("Expiration Date : " + ExpirationDate);
 
@@ -356,7 +353,8 @@ namespace Rhino.Licensing
 
         private void TryGettingNewLeaseSubscription()
         {
-            var service = ChannelFactory<ISubscriptionLicensingService>.CreateChannel(new BasicHttpBinding(), new EndpointAddress(SubscriptionEndpoint));
+            var channelFactory = new ChannelFactory<ISubscriptionLicensingService>(new BasicHttpBinding(), new EndpointAddress(SubscriptionEndpoint));
+            var service = channelFactory.CreateChannel();
             try
             {
                 var newLicense = service.LeaseLicense(License, SubscriptionEndpointPasscode);
@@ -366,7 +364,7 @@ namespace Rhino.Licensing
                 if (newLicense.IndexOf("no update", 0, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     Log.WarnFormat(newLicense);
-                    
+
                     return;
                 }
 
@@ -429,15 +427,15 @@ namespace Rhino.Licensing
                 )
             {
                 // Many organizations have blocked NTP traffic, so this
-                // check creates additional noise that is cause for 
+                // check creates additional noise that is cause for
                 // concern on enterprise security teams.
-                // Since the traffic is already blocked, 
-                // this check would not produce a desired result 
+                // Since the traffic is already blocked,
+                // this check would not produce a desired result
                 // anyway.
                 return;
             }
 
-            var sntp = new SntpClient(TimeServers);
+            var sntp = new SntpClient(GetTimeServers());
             sntp.BeginGetDate(time =>
             {
                 if (time > ExpirationDate)
@@ -447,6 +445,15 @@ namespace Rhino.Licensing
             {
                 /* ignored */
             });
+        }
+
+        /// <summary>
+        /// Extension point to return different time servers
+        /// </summary>
+        /// <returns></returns>
+        protected virtual string[] GetTimeServers()
+        {
+            return TimeServers;
         }
 
         /// <summary>
@@ -517,11 +524,6 @@ namespace Rhino.Licensing
         /// </summary>
         public bool DisableFloatingLicenses { get; set; }
 
-        /// <summary>
-        /// Lease timeout
-        /// </summary>
-        public TimeSpan LeaseTimeout { get; set; }
-
         private bool ValidateFloatingLicense(string publicKeyOfFloatingLicense)
         {
             if (DisableFloatingLicenses)
@@ -536,7 +538,8 @@ namespace Rhino.Licensing
             }
 
             var success = false;
-            var licensingService = ChannelFactory<ILicensingService>.CreateChannel(new WSHttpBinding(), new EndpointAddress(licenseServerUrl));
+            var channelFactory = new ChannelFactory<ILicensingService>(new BasicHttpBinding(), new EndpointAddress(licenseServerUrl));
+            var licensingService = channelFactory.CreateChannel();
             try
             {
                 var leasedLicense = licensingService.LeaseLicense(
@@ -633,7 +636,7 @@ namespace Rhino.Licensing
         private bool TryGetValidDocument(string licensePublicKey, XmlDocument doc)
         {
             var rsa = new RSACryptoServiceProvider();
-            rsa.FromXmlString(licensePublicKey);
+            RSAKeyExtensions.FromXmlString(rsa,licensePublicKey);
 
             var nsMgr = new XmlNamespaceManager(doc.NameTable);
             nsMgr.AddNamespace("sig", "http://www.w3.org/2000/09/xmldsig#");
@@ -657,6 +660,21 @@ namespace Rhino.Licensing
         {
             disableFutureChecks = true;
             nextLeaseTimer.Dispose();
+        }
+
+        /// <summary>
+        /// Options for detecting multiple licenses
+        /// </summary>
+        public enum MultipleLicenseUsage
+        {
+            /// <summary>
+            /// Deny if multiple licenses are used
+            /// </summary>
+            Deny,
+            /// <summary>
+            /// Only allow if it is running for the same user
+            /// </summary>
+            AllowForSameUser
         }
     }
 }
