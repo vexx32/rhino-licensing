@@ -2,9 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net40</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net48</TargetFrameworks>
     <!--Nuspec Metadata-->
-    <Description>A software licensing framework.</Description>
+    <Description>Licensing Framework for .NET.</Description>
     <Authors>Ayende Rahien + Contributors</Authors>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/ayende/rhino-licensing</PackageProjectUrl>
@@ -15,8 +15,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
-
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -28,7 +27,8 @@
     <DocumentationFile>bin\Debug\Rhino.Licensing.XML</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -38,63 +38,67 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-     <DefineConstants>DESKTOP;</DefineConstants>
-  </PropertyGroup>
+  <Choose>
+    <When Condition="$(TargetFramework.StartsWith('net4'))">
+        <PropertyGroup>
+            <DefineConstants>DESKTOP;</DefineConstants>
+        </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>LIBLOG_PORTABLE;</DefineConstants>
-  </PropertyGroup>
+        <ItemGroup>
+            <Reference Include="System" />
+            <Reference Include="System.Core" />
+            <Reference Include="System.Security" />
+            <Reference Include="System.ServiceModel" />
+            <Reference Include="System.Xml.Linq" />
+            <Reference Include="System.Data.DataSetExtensions" />
+            <Reference Include="System.Data" />
+            <Reference Include="System.Xml" />
+        </ItemGroup>
+    </When>
 
-  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <When Condition="!$(TargetFramework.StartsWith('net4'))">
+        <ItemGroup>
+            <PackageReference Include="System.Security.Cryptography.Xml" Version="5.0.0" />
+            <PackageReference Include="System.ServiceModel.Http" Version="4.8.0" />
+            <PackageReference Include="System.ServiceModel.Primitives" Version="4.8.0" />
+            <PackageReference Include="System.Private.ServiceModel" Version="4.8.0" />
+        </ItemGroup>
+    </When>
+  </Choose>
 
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="4.4.0" />
-    <PackageReference Include="System.ServiceModel.Http" Version="4.4.0" />
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.4.0" />
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <PropertyGroup>
+            <DefineConstants>LIBLOG_PORTABLE;</DefineConstants>
+        </PropertyGroup>
 
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='net40'">
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Security" />
-    <Reference Include="System.ServiceModel">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
+        <ItemGroup>
+            <PackageReference Include="Microsoft.CSharp">
+            <Version>4.4.0</Version>
+            </PackageReference>
+        </ItemGroup>
+    </When>
+  </Choose>
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.12" />
   </ItemGroup>
-
 
   <ItemGroup>
     <Compile Include="$(SolutionDir)\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
     </Compile>
   </ItemGroup>
+
   <ItemGroup>
     <None Include="..\ayende-open-source.snk">
       <Link>ayende-open-source.snk</Link>
     </None>
     <None Include="Rhino.Licensing.nuspec" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="LibLog" Version="4.2.6" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.CSharp">
-      <Version>4.4.0</Version>
-    </PackageReference>
-  </ItemGroup>
+
 </Project>

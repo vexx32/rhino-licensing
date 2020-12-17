@@ -1,26 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props" Condition="Exists('..\packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
+    <TargetFrameworks>netcoreapp3.1;net48</TargetFrameworks>
     <ProjectGuid>{DE9C3868-B836-4CA5-A6FB-2FD78542D3B6}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rhino.Licensing.Tests</RootNamespace>
     <AssemblyName>Rhino.Licensing.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -31,6 +20,7 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
@@ -40,66 +30,72 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DefineConstants>DESKTOP;</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.ServiceModel">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="xunit, Version=1.9.2.1705, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <HintPath>..\packages\xunit.1.9.2\lib\net20\xunit.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="BaseLicenseTest.cs" />
-    <Compile Include="Can_generate_and_validate_key.cs" />
-    <Compile Include="Can_check_trial_date.cs" />
-    <Compile Include="Can_use_floating_licenses.cs" />
-    <Compile Include="Can_use_subscription_license.cs" />
+
+  <Choose>
+    <When Condition="$(TargetFramework.StartsWith('net4'))">
+        <PropertyGroup>
+            <DefineConstants>DESKTOP;</DefineConstants>
+        </PropertyGroup>
+
+        <ItemGroup>
+            <Reference Include="System" />
+            <Reference Include="System.Core" />
+            <Reference Include="System.Security" />
+            <Reference Include="System.ServiceModel" />
+            <Reference Include="System.Xml.Linq" />
+            <Reference Include="System.Data.DataSetExtensions" />
+            <Reference Include="System.Data" />
+            <Reference Include="System.Xml" />
+        </ItemGroup>
+    </When>
+
+    <When Condition="!$(TargetFramework.StartsWith('net4'))">
+        <ItemGroup>
+            <PackageReference Include="System.Security.Cryptography.Xml" Version="5.0.0" />
+            <PackageReference Include="System.ServiceModel.Http" Version="4.8.0" />
+            <PackageReference Include="System.ServiceModel.Primitives" Version="4.8.0" />
+            <PackageReference Include="System.Private.ServiceModel" Version="4.8.0" />
+        </ItemGroup>
+    </When>
+  </Choose>
+
+  <!--<ItemGroup>
     <Compile Include="$(SolutionDir)\Solution Items\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
     </Compile>
-    <Compile Include="Duplicate_license.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
+  </ItemGroup>-->
+
   <ItemGroup>
     <EmbeddedResource Include="public_and_private.xml" />
     <EmbeddedResource Include="public_only.xml" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Rhino.Licensing\Rhino.Licensing.csproj">
       <Project>{05EFD7EB-F0FB-4B65-8E4A-C8FF8DDC6A78}</Project>
       <Name>Rhino.Licensing</Name>
     </ProjectReference>
   </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="floating_private.xml" />
     <EmbeddedResource Include="floating_public.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
+
+  <!--<ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props'))" />
-  </Target>
+  </ItemGroup>-->
+
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

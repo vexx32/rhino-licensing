@@ -20,7 +20,7 @@ namespace Rhino.Licensing.Tests
 
             var validator = new LicenseValidator(public_only, path);
             validator.AssertValidLicense();
-            
+
             Assert.Equal(guid, validator.UserId);
             Assert.Equal(expiration, validator.ExpirationDate);
             Assert.Equal("Oren Eini", validator.Name);

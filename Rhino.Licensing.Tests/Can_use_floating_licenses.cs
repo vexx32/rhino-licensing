@@ -4,6 +4,7 @@ namespace Rhino.Licensing.Tests
     using System.IO;
     using System.ServiceModel;
     using Xunit;
+    using Rhino.Licensing;
 
     public class Can_use_floating_licenses : BaseLicenseTest
     {
@@ -19,6 +20,8 @@ namespace Rhino.Licensing.Tests
             Assert.Contains(server_public_key, license);
             Assert.Contains(owner_name, license);
         }
+
+#if DESKTOP
 
         [Fact]
         public void Can_validate_floating_license()
@@ -37,13 +40,12 @@ namespace Rhino.Licensing.Tests
             host.Open();
             try
             {
-
                 var validator = new LicenseValidator(public_only, fileName, address, Guid.NewGuid());
                 validator.AssertValidLicense();
             }
             finally
             {
-                host.Abort();
+                host.Close();
             }
         }
 
@@ -73,9 +75,11 @@ namespace Rhino.Licensing.Tests
             }
             finally
             {
-                host.Abort();
+                host.Close();
             }
         }
+
+#endif
 
         private void GenerateLicenseFileInLicensesDirectory()
         {
