@@ -8,7 +8,7 @@ namespace Rhino.Licensing.Tests
 {
     public class Can_use_subscription_license : BaseLicenseTest
     {
-        
+
 
         [Fact]
         public void Can_generate_subscription_license()
@@ -16,7 +16,7 @@ namespace Rhino.Licensing.Tests
             var generator = new LicenseGenerator(public_and_private);
             var license = generator.Generate("ayende", new Guid("FFD0C62C-B953-403e-8457-E90F1085170D"),
                                              new DateTime(2010, 10, 10),
-                                             new Dictionary<string, string> {{"version", "2.0"}}, LicenseType.Subscription);
+                                             new Dictionary<string, string> { { "version", "2.0" } }, LicenseType.Subscription);
 
             var license_header = @"<license id=""ffd0c62c-b953-403e-8457-e90f1085170d"" expiration=""2010-10-10T00:00:00.0000000"" type=""Subscription"" version=""2.0"">";
             var owner_name = "<name>ayende</name>";
@@ -33,12 +33,11 @@ namespace Rhino.Licensing.Tests
                                              DateTime.UtcNow.AddDays(15),
                                              new Dictionary<string, string> { { "version", "2.0" } }, LicenseType.Subscription);
 
-            
+
             var path = Path.GetTempFileName();
             File.WriteAllText(path, license);
 
-
-            Assert.DoesNotThrow(() => new LicenseValidator(public_only, path).AssertValidLicense());	
+            new LicenseValidator(public_only, path).AssertValidLicense();
         }
 
         [Fact]
@@ -54,10 +53,10 @@ namespace Rhino.Licensing.Tests
             File.WriteAllText(path, license);
 
 
-            Assert.DoesNotThrow(() => new LicenseValidator(public_only, path)
-                                        {
-                                            SubscriptionEndpoint = "http://localhost/"+Guid.NewGuid()
-                                        }.AssertValidLicense());
+            new LicenseValidator(public_only, path)
+            {
+                SubscriptionEndpoint = "http://localhost/" + Guid.NewGuid()
+            }.AssertValidLicense();
 
         }
 
@@ -78,6 +77,8 @@ namespace Rhino.Licensing.Tests
             }.AssertValidLicense());
         }
 
+#if DESKTOP
+
         [Fact]
         public void Can_validate_expired_subscription_license_when_service_returns_new_one()
         {
@@ -96,13 +97,17 @@ namespace Rhino.Licensing.Tests
 
             host.Open();
 
-            Assert.DoesNotThrow(() => new LicenseValidator(public_only, path)
+            try
             {
-                SubscriptionEndpoint = address
-            }.AssertValidLicense());
-
-
-            host.Close();
+                new LicenseValidator(public_only, path)
+                {
+                    SubscriptionEndpoint = address
+                }.AssertValidLicense();
+            }
+            finally
+            {
+                host.Close();
+            }
         }
 
         [Fact]
@@ -123,14 +128,21 @@ namespace Rhino.Licensing.Tests
 
             host.Open();
 
-            Assert.Throws<LicenseExpiredException>(() => new LicenseValidator(public_only, path)
+            try
             {
-                SubscriptionEndpoint = address
-            }.AssertValidLicense());
-
-
-            host.Close();
+                Assert.Throws<LicenseExpiredException>(() => new LicenseValidator(public_only, path)
+                {
+                    SubscriptionEndpoint = address
+                }.AssertValidLicense());
+            }
+            finally
+            {
+                host.Close();
+            }
         }
+
+#endif
+
     }
 
     public class NoOpSubscriptionLicensingService : ISubscriptionLicensingService

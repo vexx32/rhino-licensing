@@ -1,3 +1,5 @@
+#if DESKTOP
+
 namespace Rhino.Licensing
 {
     using System;
@@ -9,8 +11,8 @@ namespace Rhino.Licensing
 
     /// <summary>
     /// Licensing server implementation.
-    /// Because we use this service behavior, we don't have to worry 
-    /// about multi threading issues. it is not something that we 
+    /// Because we use this service behavior, we don't have to worry
+    /// about multi threading issues. it is not something that we
     /// expect to have to deal with huge load, anyway.
     /// </summary>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Single)]
@@ -218,3 +220,5 @@ namespace Rhino.Licensing
 		}
 	}
 }
+
+#endif
